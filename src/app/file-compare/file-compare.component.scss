@@ -1,0 +1,55 @@
+.file-compare-container {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+  }
+  
+  .editor-container {
+    width: 45%;
+    margin-bottom: 20px;
+  }
+  
+  #editor1, #editor2 {
+    height: 400px;
+    border: 1px solid #ccc;
+  }
+  
+  .changes-list-container {
+    margin: 10px;
+  }
+  
+  .changes-list-container ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .changes-list-container li {
+    cursor: pointer;
+    padding: 5px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  .changes-list-container li:hover {
+    background-color: #f0f0f0;
+  }
+  
+  .buttons-container {
+    display: flex;
+    justify-content: center;
+    margin: 10px;
+  }
+  
+  .insert {
+    background-color: #d4f4dd;
+  }
+  
+  .delete {
+    background-color: #f4d4d4;
+  }
+  
+  .current-highlight {
+    background-color: yellow;
+  }
+  
