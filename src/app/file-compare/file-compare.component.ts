@@ -1,8 +1,8 @@
-import { Component } from '@angular/core';
-import { EditorView, basicSetup } from 'codemirror';
-import { EditorState, StateEffect,Range } from '@codemirror/state';
-import { Decoration, ViewPlugin, ViewUpdate, WidgetType, DecorationSet } from '@codemirror/view';
-import { diff_match_patch, Diff } from 'diff-match-patch';
+import { DOCUMENT } from '@angular/common';
+import { Component, ViewChild, ElementRef, AfterViewInit, Renderer2, ChangeDetectorRef, Inject } from '@angular/core';
+
+declare var CodeMirror: any;
+declare var js_beautify: any;
 
 @Component({
   selector: 'app-file-compare',
@@ -11,144 +11,96 @@ import { diff_match_patch, Diff } from 'diff-match-patch';
   templateUrl: './file-compare.component.html',
   styleUrl: './file-compare.component.scss'
 })
-export class FileCompareComponent {
-  editor1!: EditorView;
-  editor2!: EditorView;
-  dmp: diff_match_patch;
+export class FileCompareComponent implements AfterViewInit {
+  wrapText: boolean = false;
+  connect: string | null = null;
+  panes!: number;
+  leftContent: string = "";
+  rightContent: string = "";
+  private mergeViewEditor: any;
+  firstFileName: string = "No file selected";
+  secondFileName: string = "No file selected";
 
-  constructor() {
-    this.dmp = new diff_match_patch();
+
+
+  constructor(@Inject(DOCUMENT) private document: Document) { }
+
+  ngAfterViewInit() {
+    this.formatAndCompare();
   }
-
-  ngOnInit(): void {}
-
-  ngAfterViewInit(): void {
-    this.initializeEditors();
-  }
-
-  initializeEditors(): void {
-    const initialState1 = EditorState.create({
-      doc: 'Paste your file 1 content here...',
-      extensions: [basicSetup]
-    });
-
-    const initialState2 = EditorState.create({
-      doc: 'Paste your file 2 content here...',
-      extensions: [basicSetup]
-    });
-
-    this.editor1 = new EditorView({
-      state: initialState1,
-      parent: document.querySelector('#editor1')!
-    });
-
-    this.editor2 = new EditorView({
-      state: initialState2,
-      parent: document.querySelector('#editor2')!
+  formatAndCompare() {
+    // const target = this.editorContainer.nativeElement;
+    const target = this.document.getElementById("view") as HTMLDivElement;
+    if (this.mergeViewEditor) {
+      this.rightContent = this.mergeViewEditor.rightOriginal().getValue();
+      this.leftContent = this.mergeViewEditor.editor().getValue();
+    }
+    target.innerHTML = "";
+    this.mergeViewEditor = CodeMirror.MergeView(target, {
+      value: this.leftContent,
+      origLeft: this.panes == 3 ? this.mergeViewEditor.rightOriginal().getValue() : null,
+      orig: this.rightContent,
+      lineNumbers: true,
+      mode: "application/json",
+      showDifferences: true,
+      connect: this.connect,
+      collapseIdentical: false,
+      revertButtons: true,
+      allowEditingOriginals: true,
+      highlightDifferences: true,
+      matchBrackets: true,
+      autofocus: true,
+      chunkClassLocation: ['background', 'wrap', 'gutter']
     });
   }
-
-  compareFiles(): void {
-    const text1 = this.editor1.state.doc.toString();
-    const text2 = this.editor2.state.doc.toString();
-    const diff = this.dmp.diff_main(text1, text2);
-    this.dmp.diff_cleanupSemantic(diff);
-    this.highlightDifferences(diff);
-  }
-
-  highlightDifferences(diff: Diff[]): void {
-    const decorations1: Range<Decoration>[] = [];
-    const decorations2: Range<Decoration>[] = [];
-    let pos1 = 0, pos2 = 0;
-
-    diff.forEach(([op, data]) => {
-      const from1 = pos1, from2 = pos2;
-      if (op === 0) { // Equal
-        pos1 += data.length;
-        pos2 += data.length;
-      } else if (op === -1) { // Delete from editor1
-        pos1 += data.length;
-        decorations1.push(this.createLineDecoration(from1, pos1, 'delete'));
-        decorations1.push(this.createWidgetDecoration(from1, 'delete', data, 2));
-      } else { // Insert to editor2
-        pos2 += data.length;
-        decorations2.push(this.createLineDecoration(from2, pos2, 'insert'));
-        decorations2.push(this.createWidgetDecoration(from2, 'insert', data, 1));
+  onFileChange(event: any, fileType: string) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const content = e.target.result;
+      if (fileType === 'first') {
+        this.mergeViewEditor.editor().setValue(content);
+        this.firstFileName =  file.name;
+      } else {
+        this.mergeViewEditor.rightOriginal().setValue(content);
+        this.secondFileName = file.name;
       }
-    });
-
-    this.applyHighlights(this.editor1, decorations1);
-    this.applyHighlights(this.editor2, decorations2);
+    };
+    reader.readAsText(file);
   }
-
-  createLineDecoration(from: number, to: number, className: string): Range<Decoration> {
-    return Decoration.line({
-      attributes: {
-        class: className,
-        style: 'position: relative;'
-      }
-    }).range(from, to);
+  onLanguageChange(event: Event) {
+    const target = event.target as HTMLInputElement;
   }
-
-  createWidgetDecoration(pos: number, className: string, data: string, editorNumber: number): Range<Decoration> {
-    return Decoration.widget({
-      widget: new MergeWidget(data, editorNumber, this),
-      side: 1,
-    }).range(pos, pos);
-  }
-
-  applyHighlights(editor: EditorView, decorations: Range<Decoration>[]): void {
-    const decoPlugin = ViewPlugin.fromClass(class {
-      decorations: DecorationSet;
-
-      constructor(view: EditorView) {
-        this.decorations = Decoration.set(decorations);
-      }
-
-      update(update: ViewUpdate) {}
-    });
-
-    editor.dispatch({
-      effects: StateEffect.appendConfig.of([decoPlugin])
-    });
-  }
-
-  mergeLine(data: string, editorNumber: number): void {
-    if (editorNumber === 1) {
-      this.editor2.dispatch({
-        changes: { from: 0, to: this.editor2.state.doc.length, insert: data }
-      });
+  onChangeConnect(event: Event) {
+    const target = event.target as HTMLInputElement;
+    if (target.checked) {
+      this.connect = null;
     } else {
-      this.editor1.dispatch({
-        changes: { from: 0, to: this.editor1.state.doc.length, insert: data }
-      });
+      this.connect = "align";
+    }
+    this.formatAndCompare();
+  }
+  onChangeThreeWay(event: Event) {
+    const target = event.target as HTMLInputElement;
+    if (target.checked) {
+      this.panes = 3;
+    } else {
+      this.panes = 2;
+    }
+    this.formatAndCompare();
+  }
+
+  onWrapChange(event: Event) {
+    const target = event.target as HTMLInputElement;
+    if (target.checked) {
+      this.mergeViewEditor.editor().setOption('lineWrapping', true);
+      this.mergeViewEditor.rightOriginal().setOption('lineWrapping', true);
+      this.mergeViewEditor.editor().setValue(js_beautify(this.mergeViewEditor.editor().getValue()));
+      this.mergeViewEditor.rightOriginal().setValue(js_beautify(this.mergeViewEditor.rightOriginal().getValue()));
+    } else {
+      this.mergeViewEditor.editor().setOption('lineWrapping', false);
+      this.mergeViewEditor.rightOriginal().setOption('lineWrapping', false);
     }
   }
-}
 
-class MergeWidget extends WidgetType {
-  constructor(readonly data: string, readonly editorNumber: number, readonly parent: FileCompareComponent) {
-    super();
-  }
-
-  toDOM(): HTMLElement {
-    const wrap = document.createElement('span');
-    wrap.className = 'merge-icon';
-    wrap.innerText = '⇨';
-    wrap.title = 'Merge this line';
-    wrap.onclick = () => {
-      this.parent.mergeLine(this.data, this.editorNumber);
-    };
-    return wrap;
-  }
-
-  override eq(widget: WidgetType): boolean {
-    return widget instanceof MergeWidget &&
-      widget.data === this.data &&
-      widget.editorNumber === this.editorNumber;
-  }
-
-  override ignoreEvent(): boolean {
-    return false;
-  }
 }

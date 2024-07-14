@@ -1,55 +1,37 @@
-.file-compare-container {
-    display: flex;
-    justify-content: space-around;
-    flex-wrap: wrap;
-  }
-  
-  .editor-container {
-    width: 45%;
-    margin-bottom: 20px;
-  }
-  
-  #editor1, #editor2 {
-    height: 400px;
-    border: 1px solid #ccc;
-  }
-  
-  .changes-list-container {
-    margin: 10px;
-  }
-  
-  .changes-list-container ul {
-    list-style-type: none;
-    padding: 0;
-  }
-  
-  .changes-list-container li {
-    cursor: pointer;
-    padding: 5px;
-    margin: 5px 0;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-  }
-  
-  .changes-list-container li:hover {
-    background-color: #f0f0f0;
-  }
-  
-  .buttons-container {
-    display: flex;
-    justify-content: center;
-    margin: 10px;
-  }
-  
-  .insert {
-    background-color: #d4f4dd;
-  }
-  
-  .delete {
-    background-color: #f4d4d4;
-  }
-  
-  .current-highlight {
-    background-color: yellow;
-  }
-  
+.editor-container {
+  height: 500px;
+  border: 1px solid #ccc;
+}
+
+.row {
+  display: flex;
+  justify-content: space-around;
+  height: 41px;
+}
+
+.column {
+  display: flex;
+  align-items: center;
+}
+.header{
+  height: 50PX;
+  background-color: #c0bfbf;
+  justify-content: space-between;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.compare {
+  display: flex; 
+}
+
+.upload-file {
+  background-color: #638eef;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 0.3rem;
+  cursor: pointer;
+}
+.select-language{
+  margin-left: 30px;
+}

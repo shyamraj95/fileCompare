@@ -1,14 +1,31 @@
-<div class="container">
-    <div class="panel">
-      <h3>File 1</h3>
-      <div id="editor1" class="editor"></div>
+<div class="editor-container">
+    <div class="row header">
+        <div class="column">
+            <h3>Diffchecker</h3>
+        </div>
+        <div class="column">
+            <input type="checkbox" id="wrap" name="wrap" (change)="onWrapChange($event)">&nbsp;
+            <label for="wrap">Wrap and Format</label>&nbsp;
+            <input type="checkbox" id="connect" name="connect" (change)="onChangeConnect($event)">&nbsp;
+            <label for="connect">Connect lines</label>&nbsp;
+            <input type="checkbox" id="panes" name="panes" (change)="onChangeThreeWay($event)">&nbsp;
+            <label for="panes">Enable three-way</label>&nbsp;&nbsp;
+        </div>
+
     </div>
-    <div class="panel">
-      <h3>File 2</h3>
-      <div id="editor2" class="editor"></div>
+    <div class="row  editor-header">
+        <div class="column">
+            <h4>Paste Contents Or</h4>&nbsp;
+            <label class="upload-file" for="upload-first">Choose file</label>&nbsp;
+            <input type="file" id="upload-first" (change)="onFileChange($event, 'first')" hidden />
+            <span>{{firstFileName}}</span>
+        </div>
+        <div class="column">
+            <h4>Paste Contents Or</h4>&nbsp;
+            <label class="upload-file" for="upload-secound">Choose file</label>&nbsp;
+            <input type="file" id="upload-secound" (change)="onFileChange($event, 'second')" hidden />
+            <span>{{secondFileName}}</span>
+        </div>
     </div>
-  </div>
-  <div class="controls">
-    <button (click)="compareFiles()">Compare</button>
-  </div>
-  
+    <div id="view"></div>
+</div>

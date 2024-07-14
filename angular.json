@@ -30,9 +30,18 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "src/assets/css/pure-min.css",
+              "src/assets/css/codemirror.css",
+              "src/assets/css/merge.css"
             ],
-            "scripts": []
+            "scripts": [
+              "src/assets/js/codemirror.js",
+              "src/assets/js/diff_match_patch.js",
+              "src/assets/js/merge.js",
+              "src/assets/js/javascript.js",
+              "src/assets/js/beautify.min.js"
+            ]
           },
           "configurations": {
             "production": {
